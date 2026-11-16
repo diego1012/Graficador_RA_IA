@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Graficador Rockwell</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="{{ asset_url('/favicon.svg') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ asset_url('/vendor/nouislider.min.css') }}"
+    />
+    <link rel="stylesheet" href="{{ asset_url('/css/app.css') }}" />
+    <script src="{{ asset_url('/js/theme.js') }}"></script>
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48" role="img">
+            <path d="M4 26h8l4-12 6 24 5-18 3 6h14" />
+          </svg>
+        </div>
+        <div>
+          <h1>Graficador Rockwell</h1>
+          <p>CSV eléctricos · limpieza y gráficas interactivas</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="service-status" title="Estado del servicio">
+          <span id="health-dot" class="status-dot" aria-hidden="true"></span>
+          <span id="health-text">Comprobando servicio…</span>
+        </div>
+        <button
+          id="theme-toggle"
+          class="theme-toggle"
+          type="button"
+          aria-pressed="false"
+          title="Cambiar a modo oscuro"
+        >
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" />
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" />
+            <path
+              d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+            />
+          </svg>
+          <span id="theme-toggle-label">Modo oscuro</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="page">
+      <nav
+        id="view-tabs"
+        class="view-tabs hidden"
+        role="tablist"
+        aria-label="Cambiar de vista"
+      >
+        <button
+          id="tab-config"
+          class="tab is-active"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="view-config"
+        >
+          Datos y opciones
+        </button>
+        <button
+          id="tab-chart"
+          class="tab"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="view-chart"
+          disabled
+        >
+          Gráfica
+        </button>
+      </nav>
+
+      <div
+        id="view-config"
+        class="view"
+        role="tabpanel"
+        aria-labelledby="tab-config"
+      >
+        <section class="card upload-card" aria-labelledby="upload-title">
+          <div class="upload-copy">
+            <p class="eyebrow">Paso 1 · Carga</p>
+            <h2 id="upload-title">Sube tu archivo CSV</h2>
+            <p class="muted">
+              Se detecta el formato, se limpian filas nulas y columnas de texto en
+              memoria y se preparan las variables eléctricas.
+            </p>
+          </div>
+
+          <div
+            id="drop-zone"
+            class="drop-zone"
+            role="button"
+            tabindex="0"
+            aria-label="Seleccionar o arrastrar un archivo CSV"
+          >
+            <input
+              id="file-input"
+              type="file"
+              accept=".csv,text/csv"
+              hidden
+            />
+            <div class="drop-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 16V4m0 0L7 9m5-5 5 5" />
+                <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+              </svg>
+            </div>
+            <p><strong>Arrastra tu CSV aquí</strong> o haz clic para seleccionar</p>
+            <p class="hint">RA · CCW · BlackBox · máximo 50 MB</p>
+          </div>
+
+          <p id="upload-status" class="upload-status" role="status" aria-live="polite"></p>
+        </section>
+
+        <section id="summary" class="card summary hidden" aria-labelledby="summary-title">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Paso 2 · Limpieza</p>
+              <h2 id="summary-title">Resumen del archivo</h2>
+            </div>
+            <span id="format-badge" class="badge">—</span>
+          </div>
+
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span>Archivo</span>
+              <strong id="sum-file">—</strong>
+            </div>
+            <div class="summary-item">
+              <span>Filas originales</span>
+              <strong id="sum-rows-raw">—</strong>
+            </div>
+            <div class="summary-item">
+              <span>Filas tras limpieza</span>
+              <strong id="sum-rows-clean">—</strong>
+            </div>
+            <div class="summary-item">
+              <span>Variables numéricas</span>
+              <strong id="sum-vars">—</strong>
+            </div>
+            <div class="summary-item wide">
+              <span>Rango temporal</span>
+              <strong id="sum-time">—</strong>
+            </div>
+          </div>
+
+          <p id="dropped-columns" class="dropped-note"></p>
+        </section>
+
+        <section
+          id="config-panel"
+          class="card controls-card hidden"
+          aria-labelledby="variables-title"
+        >
+          <div class="section-head compact">
+            <div>
+              <p class="eyebrow">Paso 3 · Variables</p>
+              <h2 id="variables-title">Selecciona y colorea</h2>
+            </div>
+            <span id="var-count" class="muted"></span>
+          </div>
+
+          <div class="toolbar" role="group" aria-label="Acciones sobre variables">
+            <button id="select-all" type="button" class="ghost">Seleccionar todas</button>
+            <button id="select-none" type="button" class="ghost">Limpiar selección</button>
+            <button id="reset-colors" type="button" class="ghost">Restablecer colores</button>
+          </div>
+
+          <div
+            id="variables-list"
+            class="variables-list"
+            role="group"
+            aria-label="Variables del archivo"
+          ></div>
+
+          <div class="range-block">
+            <div class="section-head compact">
+              <div>
+                <p class="eyebrow">Paso 4 · Rango</p>
+                <h2>Datos a graficar</h2>
+              </div>
+              <span id="range-count" class="muted"></span>
+            </div>
+            <div id="range-slider" class="range-slider"></div>
+            <div class="range-labels">
+              <div>
+                <span>Inicio</span>
+                <strong id="range-start">—</strong>
+              </div>
+              <div class="range-end">
+                <span>Fin</span>
+                <strong id="range-end">—</strong>
+              </div>
+            </div>
+          </div>
+
+          <button id="plot-button" type="button" class="primary" disabled>
+            Generar gráfica
+          </button>
+        </section>
+      </div>
+
+      <div
+        id="view-chart"
+        class="view hidden"
+        role="tabpanel"
+        aria-labelledby="tab-chart"
+      >
+        <section
+          class="card chart-card chart-card-full"
+          aria-labelledby="chart-title"
+        >
+          <div class="section-head compact chart-head">
+            <div>
+              <p class="eyebrow">Resultado</p>
+              <h2 id="chart-title">Gráfica de tiempo</h2>
+              <p class="chart-hint muted">
+                Clic en la gráfica para fijar un punto; clic en su etiqueta para
+                quitarlo.
+              </p>
+            </div>
+            <div class="chart-actions">
+              <span id="chart-meta" class="muted"></span>
+              <button id="clear-pins" type="button" class="ghost hidden">
+                Quitar puntos fijados
+              </button>
+              <button id="open-window" type="button" class="ghost" disabled>
+                Abrir en ventana
+              </button>
+              <button id="back-to-config" type="button" class="ghost">
+                Volver a opciones
+              </button>
+              <button id="update-plot" type="button" class="ghost" disabled>
+                Actualizar gráfica
+              </button>
+            </div>
+          </div>
+
+          <div id="chart-empty" class="empty-state">
+            <div class="empty-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 19V5m0 14h16" />
+                <path d="m7 15 4-5 3 3 4-6" />
+              </svg>
+            </div>
+            <p>Selecciona variables y pulsa <strong>Generar gráfica</strong>.</p>
+            <p class="muted">Los nombres y colores ya están listos antes de graficar.</p>
+          </div>
+
+          <div id="chart-wrap" class="chart-wrap hidden">
+            <div id="chart" class="chart"></div>
+            <div id="chart-loading" class="loading hidden" role="status" aria-live="polite">
+              <span class="spinner" aria-hidden="true"></span>
+              Generando gráfica…
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <span>Graficador Rockwell v{{ app_version }}</span>
+      <span>RA · CCW · BlackBox</span>
+    </footer>
+
+    <dialog
+      id="variable-dialog"
+      class="variable-dialog"
+      aria-labelledby="variable-dialog-title"
+    >
+      <form id="variable-form" class="variable-form" novalidate>
+        <div class="dialog-head">
+          <p class="eyebrow">Opciones de variable</p>
+          <h2 id="variable-dialog-title">—</h2>
+          <p class="muted">
+            Nombre original: <span id="variable-original-name">—</span>
+          </p>
+        </div>
+
+        <div class="dialog-fields">
+          <div class="field">
+            <label for="variable-name-input">Nombre en la gráfica</label>
+            <div class="field-row">
+              <input
+                id="variable-name-input"
+                type="text"
+                maxlength="80"
+                autocomplete="off"
+                spellcheck="false"
+              />
+              <button id="variable-name-reset" type="button" class="ghost">
+                Original
+              </button>
+            </div>
+            <p class="field-hint">Vacío = nombre original del CSV.</p>
+          </div>
+
+          <div class="field-pair">
+            <div class="field">
+              <label for="variable-unit-input">Unidades</label>
+              <input
+                id="variable-unit-input"
+                type="text"
+                maxlength="4"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="V, A, kW…"
+                aria-describedby="variable-unit-hint"
+              />
+              <p id="variable-unit-hint" class="field-hint">Máximo 4 caracteres.</p>
+            </div>
+            <div class="field">
+              <label for="variable-color-input">Color</label>
+              <input id="variable-color-input" type="color" />
+            </div>
+          </div>
+
+          <fieldset class="scale-field">
+            <legend class="visually-hidden">Escalado</legend>
+            <div class="switch-row">
+              <div>
+                <label for="variable-scale-toggle" class="switch-label">Escalar variable</label>
+                <p id="variable-scale-real" class="field-hint">—</p>
+              </div>
+              <input
+                id="variable-scale-toggle"
+                class="switch"
+                type="checkbox"
+                role="switch"
+                aria-describedby="variable-scale-real"
+              />
+            </div>
+            <div class="scale-bounds">
+              <div class="field">
+                <label for="variable-scale-min">Mínimo</label>
+                <input id="variable-scale-min" type="number" step="any" inputmode="decimal" />
+              </div>
+              <div class="field">
+                <label for="variable-scale-max">Máximo</label>
+                <input id="variable-scale-max" type="number" step="any" inputmode="decimal" />
+              </div>
+            </div>
+            <p id="variable-scale-error" class="field-error" role="alert" hidden></p>
+          </fieldset>
+
+          <div class="dialog-preview">
+            <span>Vista previa de la leyenda</span>
+            <strong id="variable-preview">
+              <span id="variable-preview-swatch" class="swatch" aria-hidden="true"></span>
+              <span id="variable-preview-text">—</span>
+            </strong>
+          </div>
+        </div>
+
+        <div class="dialog-actions">
+          <button id="variable-cancel" type="button" class="ghost">Cancelar</button>
+          <button id="variable-accept" type="submit" class="primary">Aceptar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <script defer src="{{ asset_url('/vendor/plotly.min.js') }}"></script>
+    <script defer src="{{ asset_url('/vendor/nouislider.min.js') }}"></script>
+    <script defer src="{{ asset_url('/js/app.js') }}"></script>
+  </body>
+</html>

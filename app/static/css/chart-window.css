@@ -1,0 +1,107 @@
+:root {
+  --gr-bg: #eef3f9;
+  --gr-surface: #ffffff;
+  --gr-ink: #10233f;
+  --gr-muted: #6b7f96;
+  --gr-border: #d8e2ee;
+  --gr-accent: #0f766e;
+  --gr-accent-soft: #e5f5f3;
+  --gr-accent-border: #9bd8d1;
+  --gr-accent-hover: #d4f0ec;
+  --gr-glow-1: rgba(15, 118, 110, 0.1);
+  --gr-font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --gr-bg: #0b1320;
+  --gr-surface: #131e2e;
+  --gr-ink: #e4ecf5;
+  --gr-muted: #8a9db3;
+  --gr-border: #263649;
+  --gr-accent: #2bb3a5;
+  --gr-accent-soft: #11302f;
+  --gr-accent-border: #1f5a55;
+  --gr-accent-hover: #164240;
+  --gr-glow-1: rgba(43, 179, 165, 0.08);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 8% 0%, var(--gr-glow-1), transparent 30rem),
+    var(--gr-bg);
+  color: var(--gr-ink);
+  font-family: var(--gr-font);
+}
+
+.chart-window-header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--gr-border);
+  background: var(--gr-surface);
+}
+
+.chart-window-header .eyebrow {
+  margin: 0 0 2px;
+  color: var(--gr-accent);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.chart-window-header h1 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+.chart-window-meta {
+  margin: 3px 0 0;
+  color: var(--gr-muted);
+  font-size: 0.78rem;
+}
+
+.chart-window-header .ghost {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border: 1px solid var(--gr-border);
+  border-radius: 10px;
+  background: var(--gr-accent-soft);
+  color: var(--gr-accent);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chart-window-header .ghost:hover {
+  border-color: var(--gr-accent-border);
+  background: var(--gr-accent-hover);
+}
+
+.standalone-chart {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  padding: 10px 14px 14px;
+}
